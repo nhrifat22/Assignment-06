@@ -1,9 +1,16 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
+@theme {
+  --color-brand: #ccff00;
+  --color-panel: #12151c;
+  --color-line: #232733;
+}
+
 body {
-  background: #0a0a0a;
+  background: #0b0d12;
   color: white;
+  font-family: var(--font-inter), sans-serif;
 }
 
 .display {
