@@ -2,7 +2,7 @@
 
 A dark, no-nonsense gym companion. Browse a library of workouts, lock your favourite lifts into today's plan, save others for later, and track the total minutes and calories of your day.
 
-**Live Site:** https://your-live-link.vercel.app
+**Live Site:** https://nimble-raindrop-5942a2.netlify.app
 **GitHub:** https://github.com/nhrifat22/Assignment-06
 
 ## Technologies Used
