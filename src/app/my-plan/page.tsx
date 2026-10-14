@@ -2,35 +2,53 @@
 import { useState } from "react";
 import Link from "next/link";
 import { LuCheck, LuX, LuChevronDown } from "react-icons/lu";
-import { usePlan } from "@/context/PlanContext";
 import Loader from "@/components/Loader";
 import WorkoutStats from "@/components/WorkoutStats";
+import { usePlan } from "@/context/PlanContext";
 import { Workout } from "@/types/workout";
+
+// Plan er workout e "done" ache, Saved er workout e nai, tai done optional
+type Item = Workout & { done?: boolean };
 
 type SortType = "duration" | "calories" | "rating";
 
-function sortList<T extends Workout>(list: T[], sortBy: SortType): T[] {
-  return [...list].sort((a, b) => {
-    if (sortBy === "duration") return a.duration - b.duration;
-    if (sortBy === "calories") return b.caloriesBurned - a.caloriesBurned;
-    return b.rating - a.rating;
-  });
+function sortItems(items: Item[], sortBy: SortType) {
+  const copy = [...items];
+
+  if (sortBy === "duration") {
+    return copy.sort((a, b) => a.duration - b.duration);
+  }
+  if (sortBy === "calories") {
+    return copy.sort((a, b) => b.caloriesBurned - a.caloriesBurned);
+  }
+  return copy.sort((a, b) => b.rating - a.rating);
 }
 
 export default function MyPlan() {
   const { plan, saved, loaded, markDone, removeFromPlan, removeFromSaved } = usePlan();
+
   const [tab, setTab] = useState<"plan" | "saved">("plan");
   const [sortBy, setSortBy] = useState<SortType>("duration");
 
   if (!loaded) return <Loader />;
 
-  const list = tab === "plan" ? sortList(plan, sortBy) : sortList(saved, sortBy);
+  // kon tab e achi shei onujayi list
+  const currentList: Item[] = tab === "plan" ? plan : saved;
+  const items = sortItems(currentList, sortBy);
 
+  // Metrics shob shomoy Today's Plan theke hisab hobe
   const totalMinutes = plan.reduce((sum, w) => sum + w.duration, 0);
   const totalCalories = plan.reduce((sum, w) => sum + w.caloriesBurned, 0);
 
-  const tabClass = (name: string) =>
-    `rounded-lg px-4 py-1.5 text-sm ${tab === name ? "bg-white/10 font-bold" : "text-gray-400"}`;
+  function tabClass(name: string) {
+    if (tab === name) return "rounded-lg bg-white/10 px-4 py-1.5 text-sm font-bold";
+    return "rounded-lg px-4 py-1.5 text-sm text-gray-400";
+  }
+
+  function handleRemove(id: number) {
+    if (tab === "plan") removeFromPlan(id);
+    else removeFromSaved(id);
+  }
 
   return (
     <div className="px-4 py-10 md:px-10">
@@ -39,7 +57,7 @@ export default function MyPlan() {
         Cap of five lifts for today. Finish them, then load more.
       </p>
 
-      {/* Metrics */}
+      {/* Metrics: ekta card, 3 ta column */}
       <div className="mb-8 grid grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-panel py-5">
         <div className="px-4 md:px-6">
           <p className="text-xs text-gray-400">Exercises</p>
@@ -83,8 +101,8 @@ export default function MyPlan() {
         </div>
       </div>
 
-      {/* List */}
-      {list.length === 0 ? (
+      {/* Empty state */}
+      {items.length === 0 && (
         <div className="rounded-2xl border border-dashed border-line py-20 text-center">
           <h2 className="display text-2xl">Nothing here yet</h2>
           <p className="my-2 text-sm text-gray-400">
@@ -97,57 +115,55 @@ export default function MyPlan() {
             Go to workouts
           </Link>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {list.map((w) => (
-            <div
-              key={w.id}
-              className="flex flex-col gap-4 rounded-2xl border border-line bg-panel p-3 sm:flex-row sm:items-center"
-            >
-              <img src={w.image} alt={w.name} className="h-20 w-full rounded-lg object-cover sm:w-28" />
-
-              <div className="flex-1 space-y-1">
-                <h3
-                  className={`display text-lg ${
-                    "done" in w && w.done ? "line-through opacity-50" : ""
-                  }`}
-                >
-                  {w.name}
-                </h3>
-                <p className="text-xs text-gray-400">{w.equipment}</p>
-                <WorkoutStats workout={w} />
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  href={`/workout/${w.id}`}
-                  className="rounded-full border border-line px-4 py-2 text-sm"
-                >
-                  View Details
-                </Link>
-
-                {tab === "plan" && (
-                  <button
-                    onClick={() => markDone(w.id)}
-                    disabled={"done" in w && w.done}
-                    className="flex items-center gap-1 rounded-full bg-accent px-4 py-2 text-sm font-bold text-black disabled:opacity-50"
-                  >
-                    <LuCheck /> {"done" in w && w.done ? "Done" : "Mark as Done"}
-                  </button>
-                )}
-
-                <button
-                  onClick={() => (tab === "plan" ? removeFromPlan(w.id) : removeFromSaved(w.id))}
-                  className="p-2 text-gray-400 hover:text-white"
-                  aria-label="Remove"
-                >
-                  <LuX />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
       )}
+
+      {/* Workout list */}
+      <div className="space-y-4">
+        {items.map((w) => (
+          <div
+            key={w.id}
+            className="flex flex-col gap-4 rounded-2xl border border-line bg-panel p-3 sm:flex-row sm:items-center"
+          >
+            <img src={w.image} alt={w.name} className="h-20 w-full rounded-lg object-cover sm:w-28" />
+
+            <div className="flex-1 space-y-1">
+              <h3 className={`display text-lg ${w.done ? "line-through opacity-50" : ""}`}>
+                {w.name}
+              </h3>
+              <p className="text-xs text-gray-400">{w.equipment}</p>
+              <WorkoutStats workout={w} />
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                href={`/workout/${w.id}`}
+                className="rounded-full border border-line px-4 py-2 text-sm"
+              >
+                View Details
+              </Link>
+
+              {/* Mark as Done shudhu Today's Plan e */}
+              {tab === "plan" && (
+                <button
+                  onClick={() => markDone(w.id)}
+                  disabled={w.done}
+                  className="flex items-center gap-1 rounded-full bg-brand px-4 py-2 text-sm font-bold text-black disabled:opacity-50"
+                >
+                  <LuCheck /> {w.done ? "Done" : "Mark as Done"}
+                </button>
+              )}
+
+              <button
+                onClick={() => handleRemove(w.id)}
+                className="p-2 text-gray-400 hover:text-white"
+                aria-label="Remove"
+              >
+                <LuX />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
