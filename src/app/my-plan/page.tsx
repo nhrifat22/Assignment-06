@@ -43,7 +43,7 @@ export default function MyPlan() {
       <div className="mb-8 grid grid-cols-3 divide-x divide-line rounded-2xl border border-line bg-panel py-5">
         <div className="px-4 md:px-6">
           <p className="text-xs text-gray-400">Exercises</p>
-          <p className="display text-3xl text-accent md:text-4xl">{plan.length}</p>
+          <p className="display text-3xl text-brand md:text-4xl">{plan.length}</p>
         </div>
         <div className="px-4 md:px-6">
           <p className="text-xs text-gray-400">Minutes</p>
@@ -92,7 +92,7 @@ export default function MyPlan() {
           </p>
           <Link
             href="/"
-            className="mt-3 inline-block rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-black"
+            className="mt-3 inline-block rounded-full bg-brand px-6 py-2.5 text-sm font-bold text-black"
           >
             Go to workouts
           </Link>
